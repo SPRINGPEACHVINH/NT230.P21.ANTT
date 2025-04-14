@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # 1. Định vị file vul_server trên máy server (nơi đang bị reverse shell)
-VUL_SERVER="./vul_server"
+VUL_SERVER="/home/server/./vul_server"
 
 # 2. Xác định dải mạng LAN (ví dụ 192.168.207.0/24)
 SUBNET="192.168.42"
